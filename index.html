@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kana Study — Hiragana &amp; Katakana</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --fg: #1a1a1a;
+    --card: #ffffff;
+    --border: #e0ddd6;
+    --accent: #b3452e;
+    --accent-soft: #f4e4de;
+    --muted: #767267;
+    --correct: #2f7a4f;
+    --wrong: #b3452e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16151a;
+      --fg: #ece9e3;
+      --card: #1f1e24;
+      --border: #322f37;
+      --accent: #e29c7c;
+      --accent-soft: #3a2b26;
+      --muted: #9a9690;
+      --correct: #6fbf8f;
+      --wrong: #e2836a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.5;
+  }
+  header {
+    padding: 2rem 1.25rem 1rem;
+    text-align: center;
+  }
+  h1 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+  .sub { color: var(--muted); font-size: 0.95rem; }
+  main { max-width: 780px; margin: 0 auto; padding: 0 1rem 3rem; }
+
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1.25rem 0;
+    flex-wrap: wrap;
+  }
+  .tabs button {
+    padding: 0.55rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .tabs button.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  section { display: none; }
+  section.active { display: block; }
+
+  .hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.5rem;
+  }
+  .kana-btn {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    padding: 0.25rem;
+  }
+  .kana-btn:hover { border-color: var(--accent); }
+  .kana-btn:active { background: var(--accent-soft); }
+  .kana-char { font-size: 1.6rem; }
+  .kana-romaji { font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem; }
+  .kana-btn.empty { visibility: hidden; }
+
+  /* quiz */
+  .quiz-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    max-width: 420px;
+    margin: 1rem auto;
+  }
+  .quiz-char { font-size: 4rem; margin-bottom: 1rem; }
+  .quiz-card input {
+    font-size: 1.1rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    width: 60%;
+    text-align: center;
+  }
+  .quiz-card button.submit {
+    margin-left: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .feedback { margin-top: 1rem; min-height: 1.5rem; font-weight: 600; }
+  .feedback.correct { color: var(--correct); }
+  .feedback.wrong { color: var(--wrong); }
+  .score { color: var(--muted); font-size: 0.9rem; margin-top: 0.75rem; }
+  .quiz-scope {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .quiz-scope label { cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Kana Study</h1>
+  <div class="sub">Hiragana &amp; Katakana — chart, sound, and a quick self-quiz</div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button data-tab="hiragana" class="active">Hiragana</button>
+    <button data-tab="katakana">Katakana</button>
+    <button data-tab="quiz">Quiz</button>
+  </div>
+
+  <section id="hiragana" class="active">
+    <div class="hint">Tap a symbol to hear it (uses your browser's built-in Japanese voice, if available)</div>
+    <div class="grid" id="hiragana-grid"></div>
+  </section>
+
+  <section id="katakana">
+    <div class="hint">Tap a symbol to hear it</div>
+    <div class="grid" id="katakana-grid"></div>
+  </section>
+
+  <section id="quiz">
+    <div class="quiz-scope">
+      <label><input type="radio" name="scope" value="hiragana" checked> Hiragana</label>
+      <label><input type="radio" name="scope" value="katakana"> Katakana</label>
+      <label><input type="radio" name="scope" value="both"> Both</label>
+    </div>
+    <div class="quiz-card">
+      <div class="quiz-char" id="quiz-char">あ</div>
+      <div>
+        <input id="quiz-input" type="text" placeholder="type romaji" autocomplete="off">
+        <button class="submit" id="quiz-submit">Check</button>
+      </div>
+      <div class="feedback" id="quiz-feedback"></div>
+      <div class="score" id="quiz-score">Score: 0 / 0</div>
+    </div>
+  </section>
+</main>
+
+<script>
+// Standard 46-symbol gojuon set, in learning order (5 rows x rough grouping)
+const KANA = {
+  hiragana: [
+    ["あ","a"],["い","i"],["う","u"],["え","e"],["お","o"],
+    ["か","ka"],["き","ki"],["く","ku"],["け","ke"],["こ","ko"],
+    ["さ","sa"],["し","shi"],["す","su"],["せ","se"],["そ","so"],
+    ["た","ta"],["ち","chi"],["つ","tsu"],["て","te"],["と","to"],
+    ["な","na"],["に","ni"],["ぬ","nu"],["ね","ne"],["の","no"],
+    ["は","ha"],["ひ","hi"],["ふ","fu"],["へ","he"],["ほ","ho"],
+    ["ま","ma"],["み","mi"],["む","mu"],["め","me"],["も","mo"],
+    ["や","ya"],null,["ゆ","yu"],null,["よ","yo"],
+    ["ら","ra"],["り","ri"],["る","ru"],["れ","re"],["ろ","ro"],
+    ["わ","wa"],null,null,null,["を","wo"],
+    ["ん","n"],
+  ],
+  katakana: [
+    ["ア","a"],["イ","i"],["ウ","u"],["エ","e"],["オ","o"],
+    ["カ","ka"],["キ","ki"],["ク","ku"],["ケ","ke"],["コ","ko"],
+    ["サ","sa"],["シ","shi"],["ス","su"],["セ","se"],["ソ","so"],
+    ["タ","ta"],["チ","chi"],["ツ","tsu"],["テ","te"],["ト","to"],
+    ["ナ","na"],["ニ","ni"],["ヌ","nu"],["ネ","ne"],["ノ","no"],
+    ["ハ","ha"],["ヒ","hi"],["フ","fu"],["ヘ","he"],["ホ","ho"],
+    ["マ","ma"],["ミ","mi"],["ム","mu"],["メ","me"],["モ","mo"],
+    ["ヤ","ya"],null,["ユ","yu"],null,["ヨ","yo"],
+    ["ラ","ra"],["リ","ri"],["ル","ru"],["レ","re"],["ロ","ro"],
+    ["ワ","wa"],null,null,null,["ヲ","wo"],
+    ["ン","n"],
+  ],
+};
+
+function speak(char) {
+  if (!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(char);
+  u.lang = 'ja-JP';
+  u.rate = 0.8;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+function buildGrid(id, list) {
+  const grid = document.getElementById(id);
+  list.forEach(entry => {
+    const btn = document.createElement('button');
+    if (!entry) {
+      btn.className = 'kana-btn empty';
+      grid.appendChild(btn);
+      return;
+    }
+    const [char, romaji] = entry;
+    btn.className = 'kana-btn';
+    btn.innerHTML = `<span class="kana-char">${char}</span><span class="kana-romaji">${romaji}</span>`;
+    btn.addEventListener('click', () => speak(char));
+    grid.appendChild(btn);
+  });
+}
+buildGrid('hiragana-grid', KANA.hiragana);
+buildGrid('katakana-grid', KANA.katakana);
+
+// tabs
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('main > section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// quiz
+const allEntries = {
+  hiragana: KANA.hiragana.filter(Boolean),
+  katakana: KANA.katakana.filter(Boolean),
+};
+allEntries.both = allEntries.hiragana.concat(allEntries.katakana);
+
+let current = null;
+let score = { correct: 0, total: 0 };
+
+function currentScope() {
+  return document.querySelector('input[name="scope"]:checked').value;
+}
+
+function nextQuestion() {
+  const pool = allEntries[currentScope()];
+  current = pool[Math.floor(Math.random() * pool.length)];
+  document.getElementById('quiz-char').textContent = current[0];
+  document.getElementById('quiz-input').value = '';
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('quiz-input').focus();
+  speak(current[0]);
+}
+
+function checkAnswer() {
+  const input = document.getElementById('quiz-input');
+  const guess = input.value.trim().toLowerCase();
+  if (!guess) return;
+  const fb = document.getElementById('quiz-feedback');
+  score.total++;
+  if (guess === current[1]) {
+    score.correct++;
+    fb.textContent = 'Correct!';
+    fb.className = 'feedback correct';
+  } else {
+    fb.textContent = `Not quite — it's "${current[1]}"`;
+    fb.className = 'feedback wrong';
+  }
+  document.getElementById('quiz-score').textContent = `Score: ${score.correct} / ${score.total}`;
+  setTimeout(nextQuestion, 900);
+}
+
+document.getElementById('quiz-submit').addEventListener('click', checkAnswer);
+document.getElementById('quiz-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAnswer();
+});
+document.querySelectorAll('input[name="scope"]').forEach(r => r.addEventListener('change', nextQuestion));
+
+nextQuestion();
+</script>
+
+</body>
+</html>
